@@ -1,7 +1,7 @@
 import express from 'express';
 import { Worker } from 'worker_threads';
 const app = express();
-const threadcount = 2;
+const threadcount = 16;
 
 app.get('/non-blocking', (req, res) => {
     res.send('hi it is working');
@@ -14,24 +14,22 @@ function createworker() {
         });
 
         worker.on("message", (msg) => {
-            // Use the resolve function within this scope
             resolve(msg);
         });
 
         worker.on("error", (err) => {
-            // Use the reject function within this scope
             reject(err);
         });
     });
 }
 
 app.get('/blocking', async (req, res) => {
+    
     const workpromise = [];
 
     for (let i = 0; i < threadcount; i++) {
         workpromise.push(createworker());
     }
-
     try {
         const threadresult = await Promise.all(workpromise);
         const total = threadresult.reduce((acc, result) => acc + result, 0);
